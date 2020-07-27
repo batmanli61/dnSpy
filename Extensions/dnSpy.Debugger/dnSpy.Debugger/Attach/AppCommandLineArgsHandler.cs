@@ -39,6 +39,9 @@ namespace dnSpy.Debugger.Attach {
 			if (args.DebugAttachPid is int pid && pid != 0) {
 				var processes = await attachableProcessesService.Value.GetAttachableProcessesAsync(null, new[] { pid }, null, CancellationToken.None).ConfigureAwait(false);
 				var process = processes.FirstOrDefault(p => p.ProcessId == pid);
+				if (args.DebugEvent != 0) {
+					Environment.SetEnvironmentVariable("DNSPY_DEBUGEVENT", args.DebugEvent.ToString());
+				}
 				process?.Attach();
 			}
 			else if (args.DebugAttachProcess is string processName && !string.IsNullOrEmpty(processName)) {

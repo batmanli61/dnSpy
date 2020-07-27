@@ -699,7 +699,7 @@ namespace dndbg.Engine {
 
 			case DebugCallbackKind.CreateProcess:
 				var cpArgs = (CreateProcessDebugCallbackEventArgs)e;
-				hasReceivedCreateProcessEvent = true;
+					hasReceivedCreateProcessEvent = true;
 				process = TryAdd(cpArgs.Process);
 				if (!(process is null)) {
 					process.CorProcess.EnableLogMessages(debugOptions.LogMessages);
@@ -1317,9 +1317,22 @@ namespace dndbg.Engine {
 			}
 		}
 
+		[DllImport("kernel32.dll")]
+		static extern bool SetEvent(IntPtr hEvent);
+
+		[DllImport("kernel32.dll")]
+		static extern bool CloseHandle(IntPtr hObject);
+
 		DnProcess? TryAdd(ICorDebugProcess? comProcess) {
 			if (comProcess is null)
 				return null;
+
+			if(Environment.GetEnvironmentVariable("DNSPY_DEBUGEVENT") is string debugEventStr) {
+				Environment.SetEnvironmentVariable("DNSPY_DEBUGEVENT", null);
+				var debugEventHandle = new IntPtr(int.Parse(debugEventStr));
+				SetEvent(debugEventHandle);
+				CloseHandle(debugEventHandle);
+			}
 
 			// This method is called twice, once from DebugProcess() and once from the CreateProcess
 			// handler. It's possible that it's been terminated before DebugProcess() calls this method.
